@@ -1,0 +1,134 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.serialization'
+    id 'app.cash.paparazzi'
+}
+
+ext {
+    composeCompiler = "1.5.12"
+}
+
+android {
+    namespace 'io.github.lordraydenmk.superheroesapp'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "io.github.lordraydenmk.superheroesapp"
+        minSdkVersion 26
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        if (project.hasProperty("marvel_public_api_key")) {
+            def marvelPublicKey = '"' + project.property("marvel_public_api_key") + '"'
+            def marvelPrivateKey = '"' + project.property("marvel_private_api_key") + '"'
+            buildConfigField("String", "MARVEL_PUBLIC_API_KEY", marvelPublicKey)
+            buildConfigField("String", "MARVEL_PRIVATE_API_KEY", marvelPrivateKey)
+        } else {
+            // the app needs `marvel_public_api_key` and `marvel_private_api_key`
+            // as gradle properties to run
+            // to get one visit: https://developer.marvel.com/account
+            throw new GradleException("Please provide the Marvel API keys as gradle properties")
+        }
+    }
+
+    buildFeatures {
+        compose true
+        buildConfig true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion project.ext.composeCompiler
+    }
+
+    sourceSets {
+        test.java.srcDirs += "src/testFixtures/kotlin"
+        test.java.srcDirs += "src/paparazzi/kotlin"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    // For Kotlin projects
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+        }
+        animationsDisabled = true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packagingOptions {
+        resources.excludes.add("META-INF/*")
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0"
+
+    // this helps renovate detect and update the compose compiler
+    //noinspection GroovyUnusedAssignment
+    def composeCompiler = "androidx.compose.compiler:compiler:${project.ext.composeCompiler}"
+
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.activity:activity-compose:1.9.0'
+    def compose = "1.6.7"
+    implementation "androidx.compose.ui:ui:$compose"
+    implementation "androidx.compose.foundation:foundation:1.6.7"
+    implementation "androidx.compose.material:material:1.6.7"
+    implementation "androidx.compose.ui:ui-tooling:$compose"
+
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.12.0'
+    def lifecycle = "2.7.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:$lifecycle"
+    implementation 'androidx.fragment:fragment-ktx:1.7.0'
+    def nav_version = "2.7.7"
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+
+    implementation 'com.jakewharton.timber:timber:5.0.1'
+
+    def coil_version = "2.6.0"
+    implementation "io.coil-kt:coil-compose:$coil_version"
+
+    def retrofit = "2.11.0"
+    def okhttp = "4.12.0"
+    implementation "com.squareup.retrofit2:retrofit:$retrofit"
+    implementation "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okhttp"
+
+    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose"
+
+    def kotest = "5.9.0"
+    testImplementation "io.kotest:kotest-runner-junit5-jvm:$kotest"
+    testImplementation "io.kotest:kotest-assertions-core-jvm:$kotest"
+    testImplementation 'app.cash.turbine:turbine:1.1.0'
+    testImplementation 'org.junit.vintage:junit-vintage-engine:5.10.2'
+    testImplementation "io.coil-kt:coil-test:$coil_version"
+
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    def espresso = "3.5.1"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:$espresso"
+    androidTestImplementation "com.squareup.okhttp3:mockwebserver:$okhttp"
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose"
+
+}
